@@ -12,7 +12,7 @@ import android.view.animation.AnimationUtils;
 import com.squareup.otto.Subscribe;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.common.BusProvider;
@@ -31,8 +31,8 @@ public class NavbarFragment extends Fragment {
         return fragment;
     }
 
-    @InjectView(R.id.previous_program_button) View previousProgram;
-    @InjectView(R.id.next_program_button) View nextProgram;
+    @Bind(R.id.previous_program_button) View previousProgram;
+    @Bind(R.id.next_program_button) View nextProgram;
 
     @OnClick(R.id.previous_program_button) void onPreviousProgramClick() {
         BusProvider.instance().post(new NavbarClickEvent(false));
@@ -55,13 +55,13 @@ public class NavbarFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_navbar_overlay, container, false);
-        ButterKnife.inject(this, view);
+        ButterKnife.bind(this, view);
         return view;
     }
 
     @Override public void onDestroyView() {
         super.onDestroyView();
-        ButterKnife.reset(this);
+        ButterKnife.unbind(this);
     }
 
     @Subscribe public void onNavbarUpdateEvent(NavbarUpdateEvent event) {

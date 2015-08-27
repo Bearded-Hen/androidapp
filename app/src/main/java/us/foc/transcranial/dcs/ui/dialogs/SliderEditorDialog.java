@@ -7,7 +7,7 @@ import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.common.Logger;
@@ -36,9 +36,9 @@ public class SliderEditorDialog extends BaseDialogFragment {
     private long currentValue;
     private ProgramSetting setting;
 
-    @InjectView(R.id.dialog_title) TextView dialogTitle;
-    @InjectView(R.id.seek_value) TextView seekValue;
-    @InjectView(R.id.seek_bar_minutes) SeekBar seekBar;
+    @Bind(R.id.dialog_title) TextView dialogTitle;
+    @Bind(R.id.seek_value) TextView seekValue;
+    @Bind(R.id.seek_bar_minutes) SeekBar seekBar;
 
     @OnClick(R.id.btn_save) void onSaveClicked() {
         if (listener != null) {

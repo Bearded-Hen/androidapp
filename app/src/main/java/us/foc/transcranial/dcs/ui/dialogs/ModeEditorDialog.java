@@ -7,7 +7,7 @@ import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.model.ProgramEntity;
@@ -30,13 +30,13 @@ public class ModeEditorDialog extends BaseDialogFragment implements CompoundButt
 
     private ProgramEntity.ProgramMode currentMode;
 
-    @InjectView(R.id.dialog_title) TextView dialogTitle;
-    @InjectView(R.id.mode_value) TextView modeValue;
+    @Bind(R.id.dialog_title) TextView dialogTitle;
+    @Bind(R.id.mode_value) TextView modeValue;
 
-    @InjectView(R.id.direct_mode) RadioButton directMode;
-    @InjectView(R.id.alternating_mode) RadioButton alternatingMode;
-    @InjectView(R.id.random_mode) RadioButton randomMode;
-    @InjectView(R.id.pulse_mode) RadioButton pulseMode;
+    @Bind(R.id.direct_mode) RadioButton directMode;
+    @Bind(R.id.alternating_mode) RadioButton alternatingMode;
+    @Bind(R.id.random_mode) RadioButton randomMode;
+    @Bind(R.id.pulse_mode) RadioButton pulseMode;
 
     @OnClick(R.id.btn_save) void onSaveClicked() {
         if (listener != null) {

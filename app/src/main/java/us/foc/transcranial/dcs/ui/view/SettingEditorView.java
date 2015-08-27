@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.Bind;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.common.DisplayUtils;
 import us.foc.transcranial.dcs.model.ProgramEntity;
@@ -30,8 +30,8 @@ public class SettingEditorView extends ScrollView implements SettingsEditor {
 
     private int childViewCount;
 
-    @InjectView(R.id.left_column) ViewGroup leftColumn;
-    @InjectView(R.id.right_column) ViewGroup rightColumn;
+    @Bind(R.id.left_column) ViewGroup leftColumn;
+    @Bind(R.id.right_column) ViewGroup rightColumn;
 
     private SettingsEditEventListener listener;
 
@@ -53,7 +53,7 @@ public class SettingEditorView extends ScrollView implements SettingsEditor {
     private void init() {
         LayoutInflater inflater = LayoutInflater.from(getContext());
         View view = inflater.inflate(R.layout.view_settings_editor, this, false);
-        ButterKnife.inject(this, view);
+        ButterKnife.bind(this, view);
         this.addView(view);
 
         childParams.setMargins(0, 0, 0, bottomPaddingPx);

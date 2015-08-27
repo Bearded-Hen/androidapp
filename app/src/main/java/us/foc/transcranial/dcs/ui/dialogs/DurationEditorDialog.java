@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.model.ProgramSetting;
@@ -27,10 +27,10 @@ public class DurationEditorDialog extends BaseDialogFragment {
         return fragment;
     }
 
-    @InjectView(R.id.dialog_title) TextView dialogTitle;
-    @InjectView(R.id.seek_value) TextView seekValue;
-    @InjectView(R.id.seek_bar_minutes) SeekBar seekBarMinutes;
-    @InjectView(R.id.seek_bar_seconds) SeekBar seekBarSeconds;
+    @Bind(R.id.dialog_title) TextView dialogTitle;
+    @Bind(R.id.seek_value) TextView seekValue;
+    @Bind(R.id.seek_bar_minutes) SeekBar seekBarMinutes;
+    @Bind(R.id.seek_bar_seconds) SeekBar seekBarSeconds;
 
     @OnClick(R.id.btn_save) void onSaveClicked() {
         if (listener != null) {

@@ -9,11 +9,11 @@
         android:id="@+id/program_bg"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:contentDescription="@string/program_bg_desc"
-        android:src="@drawable/program_bg"
-        android:scaleType="centerCrop"
         android:layout_centerInParent="true"
         android:alpha="0.6"
+        android:contentDescription="@string/program_bg_desc"
+        android:scaleType="centerCrop"
+        android:src="@drawable/program_bg"
         />
 
     <TextView
@@ -45,29 +45,36 @@
 
             <TextView
                 android:id="@+id/program_creator"
-                tools:text="Creator Name"
-                android:textSize="@dimen/min_text"
-                android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_centerHorizontal="true"
-                android:textColor="@color/white"
                 android:padding="@dimen/min_padding"
+                android:textColor="@color/white"
+                android:textSize="@dimen/min_text"
                 android:visibility="gone"
+                tools:text="Creator Name"
                 />
 
             <TextView
                 android:id="@+id/program_description"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_below="@+id/program_creator"
                 android:layout_marginBottom="@dimen/min_padding"
                 android:layout_marginTop="@dimen/min_padding"
-                android:padding="@dimen/min_padding"
-                tools:text="Description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore..."
-                android:textSize="@dimen/medium_text"
-                android:layout_height="wrap_content"
-                android:layout_width="match_parent"
-                android:textColor="@color/white"
                 android:gravity="center"
+                android:padding="@dimen/min_padding"
+                android:textColor="@color/white"
+                android:textSize="@dimen/medium_text"
                 android:visibility="gone"
+                tools:text="Description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore..."
+                />
+
+            <com.github.mikephil.charting.charts.LineChart
+                android:id="@+id/current_chart"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_above="@+id/settings_editor"
                 />
 
             <us.foc.transcranial.dcs.ui.view.SettingEditorView

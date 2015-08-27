@@ -19,13 +19,13 @@ public abstract class BaseDialogFragment extends DialogFragment {
 
     @Override public void onDestroyView() {
         super.onDestroyView();
-        ButterKnife.reset(this);
+        ButterKnife.unbind(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(getLayoutResId(), container, false);
-        ButterKnife.inject(this, rootView);
+        ButterKnife.bind(this, rootView);
         return rootView;
     }
 

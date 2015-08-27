@@ -20,9 +20,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.beardedhen.androidbootstrap.FontAwesomeText;
+import com.github.mikephil.charting.charts.LineChart;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.bluetooth.ConnectionStatus;
@@ -62,17 +63,18 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
 
     private UserCommandListener userCommandListener;
 
-    @InjectView(R.id.program_name) TextView programName;
-    @InjectView(R.id.program_description) TextView programDesc;
-    @InjectView(R.id.program_creator) TextView programCreator;
-    @InjectView(R.id.program_bg) ImageView programBg;
+    @Bind(R.id.program_name) TextView programName;
+    @Bind(R.id.program_description) TextView programDesc;
+    @Bind(R.id.program_creator) TextView programCreator;
+    @Bind(R.id.program_bg) ImageView programBg;
 
-    @InjectView(R.id.play_button) FontAwesomeText btnPlay;
-    @InjectView(R.id.repeat_button) FontAwesomeText btnRepeat;
-    @InjectView(R.id.btn_bluetooth) ImageView btnBluetooth;
-    @InjectView(R.id.current_duration_view) TextView currentStatus;
+    @Bind(R.id.play_button) FontAwesomeText btnPlay;
+    @Bind(R.id.repeat_button) FontAwesomeText btnRepeat;
+    @Bind(R.id.btn_bluetooth) ImageView btnBluetooth;
+    @Bind(R.id.current_duration_view) TextView currentStatus;
 
-    @InjectView(R.id.settings_editor) SettingEditorView settingEditorView;
+    @Bind(R.id.settings_editor) SettingEditorView settingEditorView;
+    @Bind(R.id.current_chart) LineChart lineChart;
 
     @OnClick(R.id.play_button) void onPlayClicked() {
 
@@ -125,13 +127,13 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        ButterKnife.reset(this);
+        ButterKnife.unbind(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_program, container, false);
-        ButterKnife.inject(this, view);
+        ButterKnife.bind(this, view);
         btnBluetooth.setActivated(true);
 
         if (entity != null) {

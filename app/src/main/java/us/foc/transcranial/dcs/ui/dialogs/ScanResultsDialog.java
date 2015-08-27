@@ -22,7 +22,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import butterknife.InjectView;
+import butterknife.Bind;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.bluetooth.BLEDeviceScanner;
@@ -42,11 +42,11 @@ public class ScanResultsDialog extends BaseDialogFragment implements BLEDeviceSc
         return fragment;
     }
 
-    @InjectView(R.id.no_results) TextView noResultsText;
-    @InjectView(R.id.dialog_title) TextView dialogTitle;
-    @InjectView(R.id.scan_results_list) ListView scanResultsList;
-    @InjectView(R.id.progress_bar) ProgressBar progressBar;
-    @InjectView(R.id.btn_cancel) Button cancelButton;
+    @Bind(R.id.no_results) TextView noResultsText;
+    @Bind(R.id.dialog_title) TextView dialogTitle;
+    @Bind(R.id.scan_results_list) ListView scanResultsList;
+    @Bind(R.id.progress_bar) ProgressBar progressBar;
+    @Bind(R.id.btn_cancel) Button cancelButton;
 
     @OnClick(R.id.btn_cancel) void onCancel() {
         cancelScan();

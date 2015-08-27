@@ -26,8 +26,8 @@ import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import butterknife.OnPageChange;
 import us.foc.transcranial.dcs.bluetooth.ApiService;
 import us.foc.transcranial.dcs.bluetooth.BluetoothAPIManager;
@@ -62,7 +62,7 @@ public class MainMobileActivity extends FragmentActivity implements ViewPager.Pa
     private ApiService apiService;
     private ProgramEntityDao programEntityDao;
 
-    @InjectView(R.id.viewpager) ViewPager viewPager;
+    @Bind(R.id.viewpager) ViewPager viewPager;
 
     @OnPageChange(R.id.viewpager) void onPageChanged(int position) {
         BusProvider.instance().post(new NavbarUpdateEvent(position > 0,
@@ -75,7 +75,7 @@ public class MainMobileActivity extends FragmentActivity implements ViewPager.Pa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
 
         programEntityDao = new ProgramEntityDao(this);
 
