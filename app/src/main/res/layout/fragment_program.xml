@@ -70,13 +70,6 @@
                 tools:text="Description: Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore..."
                 />
 
-            <com.github.mikephil.charting.charts.LineChart
-                android:id="@+id/current_chart"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_above="@+id/settings_editor"
-                />
-
             <us.foc.transcranial.dcs.ui.view.SettingEditorView
                 android:id="@+id/settings_editor"
                 android:layout_width="match_parent"
@@ -87,7 +80,83 @@
 
         </RelativeLayout>
 
-        <include layout="@layout/play_control" />
+        <com.github.mikephil.charting.charts.LineChart
+            android:id="@+id/current_chart"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:layout_above="@+id/play_control"
+            android:visibility="gone"
+            tools:visibility="visible"
+            />
+
+        <RelativeLayout
+            android:id="@+id/play_control"
+            xmlns:bootstrap="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:layout_alignParentBottom="true"
+            android:background="@color/control_bar_bg"
+            android:clickable="false"
+            android:focusable="false"
+            tools:showIn="@layout/fragment_program"
+            >
+
+            <com.beardedhen.androidbootstrap.FontAwesomeText
+                android:id="@+id/play_button"
+                style="@style/control_bar_icon"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="4dp"
+                android:enabled="false"
+                bootstrap:fa_icon="fa-play"
+                />
+
+            <com.beardedhen.androidbootstrap.FontAwesomeText
+                android:id="@+id/repeat_button"
+                style="@style/control_bar_icon"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/play_button"
+                android:enabled="false"
+                android:visibility="gone"
+                bootstrap:fa_icon="fa-repeat"
+                />
+
+            <ImageView
+                android:id="@+id/btn_bluetooth"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="12dp"
+                android:layout_marginRight="4dp"
+                android:layout_marginTop="6dp"
+                android:layout_toRightOf="@+id/repeat_button"
+                android:gravity="center"
+                android:src="@drawable/bluetooth_disconntected_icon"
+                />
+
+            <TextView
+                android:id="@+id/current_duration_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_toRightOf="@+id/btn_bluetooth"
+                android:gravity="center"
+                android:paddingRight="32dp"
+                android:textColor="@color/text_default"
+                android:textSize="@dimen/medium_text"
+                />
+
+            <com.beardedhen.androidbootstrap.FontAwesomeText
+                android:id="@+id/settings_button"
+                style="@style/control_bar_icon"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="4dp"
+                bootstrap:fa_icon="fa-cog"
+                tools:ignore="SpUsage"
+                />
+
+        </RelativeLayout>
     </RelativeLayout>
 
 </RelativeLayout>

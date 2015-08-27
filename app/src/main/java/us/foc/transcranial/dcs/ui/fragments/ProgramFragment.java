@@ -21,6 +21,7 @@ import android.widget.TextView;
 
 import com.beardedhen.androidbootstrap.FontAwesomeText;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -28,8 +29,10 @@ import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Random;
 
 import butterknife.Bind;
+import butterknife.BindColor;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
@@ -55,6 +58,10 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private static final String PLAY_ICON = "fa-play";
     private static final String STOP_ICON = "fa-stop";
 
+    private List<String> xVals;
+    private List<Entry> yVals;
+    private LineDataSet currentDataSet;
+
     public static ProgramFragment newInstance(Bundle args) {
         ProgramFragment fragment = new ProgramFragment();
         fragment.setArguments(args);
@@ -65,7 +72,9 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private int actualCurrent;
     private int activeModeDuration;
     private int activeModeRemaining;
+
     private boolean playing = false;
+    private boolean settingsVisible = true;
 
     private UserCommandListener userCommandListener;
 
@@ -81,6 +90,8 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
 
     @Bind(R.id.settings_editor) SettingEditorView settingEditorView;
     @Bind(R.id.current_chart) LineChart currentChart;
+
+    @BindColor(R.color.icon_white) int graphColor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -151,7 +162,6 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     }
 
     @OnClick(R.id.play_button) void onPlayClicked() {
-
         if (!playing) {
             userCommandListener.onPlayProgram(entity);
         }
@@ -171,17 +181,28 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     }
 
     @OnClick(R.id.settings_button) void onSettingsClicked() {
-        boolean isVisible = (settingEditorView.getVisibility() == View.VISIBLE);
+        if (!playing) {
+            settingsVisible = !settingsVisible;
+            toggleViewVisibility(settingEditorView, settingsVisible);
+        }
+    }
 
-        if (isVisible) {
-            Animation fadeOut = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
-            settingEditorView.startAnimation(fadeOut);
-            settingEditorView.setVisibility(View.GONE);
+    private void toggleViewVisibility(View view, boolean shouldBeVisible) {
+        if (shouldBeVisible) {
+            if (view.getVisibility() != View.VISIBLE) {
+                Animation fadeIn = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
+                view.clearAnimation();
+                view.startAnimation(fadeIn);
+                view.setVisibility(View.VISIBLE);
+            }
         }
         else {
-            Animation fadeIn = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_in);
-            settingEditorView.startAnimation(fadeIn);
-            settingEditorView.setVisibility(View.VISIBLE);
+            if (view.getVisibility() == View.VISIBLE) {
+                Animation fadeOut = AnimationUtils.loadAnimation(getActivity(), android.R.anim.fade_out);
+                view.clearAnimation();
+                view.startAnimation(fadeOut);
+                view.setVisibility(View.GONE);
+            }
         }
     }
 
@@ -190,58 +211,9 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         btnPlay.setIcon(playing ? STOP_ICON : PLAY_ICON);
         btnRepeat.setEnabled(playing);
         currentStatus.setText("");
-    }
 
-    private void setupCurrentChart() {
-        currentChart.setTouchEnabled(false);
-        currentChart.setDragEnabled(false);
-        currentChart.setScaleEnabled(false);
-        currentChart.setPinchZoom(false);
-        currentChart.setDoubleTapToZoomEnabled(false);
-        currentChart.setHighlightEnabled(false);
-
-        currentChart.setNoDataTextDescription("No data from Focus Device");
-
-        currentChart.getXAxis().setDrawLabels(false);
-        currentChart.getAxisRight().setDrawLabels(false);
-        currentChart.getLegend().setEnabled(false);
-        currentChart.setViewPortOffsets(0, 0, 0, 0);
-        currentChart.setDescription(null);
-        currentChart.setDrawGridBackground(false);
-        currentChart.setBackgroundColor(Color.LTGRAY);
-
-        int count = 20;
-
-        List<String> xVals = new ArrayList<>();
-        List<Entry> yVals = new ArrayList<>();
-
-        for (int i = 0; i < count; i++) {
-            xVals.add(String.format("%d", i));
-        }
-
-        for (int i = 0; i < count; i++) {
-            float val = (float) Math.random() * 2;
-            yVals.add(new Entry(val, i));
-        }
-
-        // create a dataset and give it a type
-        LineDataSet set = new LineDataSet(yVals, "DataSet");
-
-        set.setColor(Color.BLACK);
-        set.setCircleColor(Color.BLACK);
-        set.setLineWidth(2f);
-        set.setDrawCircles(false);
-        set.setFillAlpha(65);
-        set.setFillColor(Color.BLACK);
-        set.setDrawCubic(true);
-        set.setDrawFilled(true);
-        set.setDrawValues(false);
-
-        ArrayList<LineDataSet> dataSets = new ArrayList<>();
-        dataSets.add(set); // add the datasets
-
-        LineData data = new LineData(xVals, dataSets);
-        currentChart.setData(data);
+        toggleViewVisibility(settingEditorView, settingsVisible && !playing);
+        toggleViewVisibility(currentChart, playing);
     }
 
     private void registerReceiverForAction(BroadcastReceiver receiver, String action) {
@@ -447,6 +419,78 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         }
     }
 
+    private void setupCurrentChart() {
+        int count = 20;
+
+        xVals = new ArrayList<>();
+        yVals = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            xVals.add(String.format("%d", i));
+        }
+
+        for (int i = 0; i < count; i++) {
+            float noise = (float) Math.random();
+
+            if (new Random().nextBoolean()) {
+                noise *= -1;
+            }
+            float val = (float) (1.0 + noise);
+            yVals.add(new Entry(val, i));
+        }
+
+        // create a dataset and give it a type
+        currentDataSet = new LineDataSet(yVals, "DataSet");
+        styleChart();
+
+        currentChart.setData(new LineData(xVals, currentDataSet));
+        currentChart.invalidate();
+    }
+
+    private void styleChart() {
+        // disable interactions
+        currentChart.setTouchEnabled(false);
+        currentChart.setDragEnabled(false);
+        currentChart.setScaleEnabled(false);
+        currentChart.setPinchZoom(false);
+        currentChart.setDoubleTapToZoomEnabled(false);
+        currentChart.setHighlightEnabled(false);
+        currentChart.setNoDataText("No data from Focus Device");
+
+        // style axes
+        YAxis axisLeft = currentChart.getAxisLeft();
+
+        currentChart.getXAxis().setEnabled(false);
+        axisLeft.setEnabled(false);
+        currentChart.getAxisRight().setEnabled(false);
+
+        axisLeft.setDrawLabels(true);
+        axisLeft.setAxisMinValue(0.0f);
+        axisLeft.setAxisMaxValue(2.2f);
+
+        // style chart
+        currentChart.getLegend().setEnabled(false);
+        currentChart.setViewPortOffsets(0, 0, 0, 0);
+        currentChart.setDescription(null);
+        currentChart.setDrawGridBackground(false);
+        currentChart.setBackground(null);
+        currentChart.setDrawBorders(false);
+        currentChart.setBorderColor(Color.RED);
+        currentChart.setBorderWidth(10.0f);
+
+        // style data points
+        currentDataSet.setColor(Color.BLACK);
+        currentDataSet.setLineWidth(0f);
+        currentDataSet.setFillAlpha(255);
+        currentDataSet.setFillColor(graphColor);
+        currentDataSet.setDrawCubic(true);
+        currentDataSet.setDrawFilled(true);
+        currentDataSet.setDrawValues(false);
+        currentDataSet.setDrawCircles(false);
+
+        currentChart.setDrawBorders(false);
+        currentChart.setBorderWidth(0.0f);
+    }
 
     // TODO should store current
 
@@ -454,6 +498,9 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
 
         @Override public void onReceive(Context context, Intent intent) {
             long now = new Date().getTime();
+
+
+            int current = entity.getCurrent();
 
             actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
             updateStatus();
