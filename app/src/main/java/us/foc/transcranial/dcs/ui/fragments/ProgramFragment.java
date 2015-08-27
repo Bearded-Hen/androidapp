@@ -5,12 +5,12 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +21,13 @@ import android.widget.TextView;
 
 import com.beardedhen.androidbootstrap.FontAwesomeText;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -28,7 +35,6 @@ import butterknife.OnClick;
 import us.foc.transcranial.dcs.R;
 import us.foc.transcranial.dcs.bluetooth.ConnectionStatus;
 import us.foc.transcranial.dcs.common.Actions;
-import us.foc.transcranial.dcs.common.Logger;
 import us.foc.transcranial.dcs.model.ProgramEntity;
 import us.foc.transcranial.dcs.model.ProgramSetting;
 import us.foc.transcranial.dcs.model.events.SettingEditEvent;
@@ -74,7 +80,75 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @Bind(R.id.current_duration_view) TextView currentStatus;
 
     @Bind(R.id.settings_editor) SettingEditorView settingEditorView;
-    @Bind(R.id.current_chart) LineChart lineChart;
+    @Bind(R.id.current_chart) LineChart currentChart;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        entity = (ProgramEntity) getArguments().getSerializable(Actions.PROGRAM_ENTITY);
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        ButterKnife.unbind(this);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_program, container, false);
+        ButterKnife.bind(this, view);
+        btnBluetooth.setActivated(true);
+
+        if (entity != null) {
+            programName.setText(entity.getProgramName());
+            programCreator.setText(entity.getCreatorName());
+            programDesc.setText(entity.getProgramDesc());
+
+            Integer backgroundResId = entity.getBgResId();
+            if (backgroundResId != null) {
+                programBg.setImageResource(backgroundResId);
+            }
+
+            settingEditorView.setProgramEntity(entity);
+            settingEditorView.setSettingEditEventListener(this);
+        }
+
+        Activity activity = getActivity();
+        if (activity instanceof UserCommandListener) {
+            userCommandListener = (UserCommandListener) activity;
+        }
+        else {
+            throw new RuntimeException("Activity is not a UserCommandListerner!");
+        }
+
+        updateConnectionState(userCommandListener.getConnectionStatus(), false, null);
+        setupCurrentChart();
+
+        return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        updateConnectionState(userCommandListener.getConnectionStatus(), false, null);
+
+        registerReceiverForAction(gattConnectionStateChangedReceiver, Actions.ACTION_CONNECTION_STATE_CHANGED);
+        registerReceiverForAction(actualCurrentNotificationReceiver, Actions.ACTION_ACTUAL_CURRENT_NOTIFICATION);
+        registerReceiverForAction(activeModeDurationNotificationReceiver, Actions.ACTION_ACTIVE_MODE_DURATION_NOTIFICATION);
+        registerReceiverForAction(programAttributesReadReceiver, Actions.ACTION_PROGRAM_ATTRIBUTES_READ);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        unregisterReceiver(gattConnectionStateChangedReceiver);
+        unregisterReceiver(actualCurrentNotificationReceiver);
+        unregisterReceiver(activeModeDurationNotificationReceiver);
+        unregisterReceiver(programAttributesReadReceiver);
+    }
 
     @OnClick(R.id.play_button) void onPlayClicked() {
 
@@ -118,73 +192,56 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         currentStatus.setText("");
     }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        entity = (ProgramEntity) getArguments().getSerializable(Actions.PROGRAM_ENTITY);
-    }
+    private void setupCurrentChart() {
+        currentChart.setTouchEnabled(false);
+        currentChart.setDragEnabled(false);
+        currentChart.setScaleEnabled(false);
+        currentChart.setPinchZoom(false);
+        currentChart.setDoubleTapToZoomEnabled(false);
+        currentChart.setHighlightEnabled(false);
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        ButterKnife.unbind(this);
-    }
+        currentChart.setNoDataTextDescription("No data from Focus Device");
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_program, container, false);
-        ButterKnife.bind(this, view);
-        btnBluetooth.setActivated(true);
+        currentChart.getXAxis().setDrawLabels(false);
+        currentChart.getAxisRight().setDrawLabels(false);
+        currentChart.getLegend().setEnabled(false);
+        currentChart.setViewPortOffsets(0, 0, 0, 0);
+        currentChart.setDescription(null);
+        currentChart.setDrawGridBackground(false);
+        currentChart.setBackgroundColor(Color.LTGRAY);
 
-        if (entity != null) {
-            programName.setText(entity.getProgramName());
-            programCreator.setText(entity.getCreatorName());
-            programDesc.setText(entity.getProgramDesc());
+        int count = 20;
 
-            Integer backgroundResId = entity.getBgResId();
-            if (backgroundResId != null) {
-                programBg.setImageResource(backgroundResId);
-            }
+        List<String> xVals = new ArrayList<>();
+        List<Entry> yVals = new ArrayList<>();
 
-            settingEditorView.setProgramEntity(entity);
-            settingEditorView.setSettingEditEventListener(this);
+        for (int i = 0; i < count; i++) {
+            xVals.add(String.format("%d", i));
         }
 
-        Activity activity = getActivity();
-        if (activity instanceof UserCommandListener) {
-            userCommandListener = (UserCommandListener) activity;
+        for (int i = 0; i < count; i++) {
+            float val = (float) Math.random() * 2;
+            yVals.add(new Entry(val, i));
         }
 
-        if (userCommandListener == null) {
-            Log.e(Logger.TAG, "Activity is not a UserCommandListerner!");
-            return null;
-        }
+        // create a dataset and give it a type
+        LineDataSet set = new LineDataSet(yVals, "DataSet");
 
-        updateConnectionState(userCommandListener.getConnectionStatus(), false, null);
+        set.setColor(Color.BLACK);
+        set.setCircleColor(Color.BLACK);
+        set.setLineWidth(2f);
+        set.setDrawCircles(false);
+        set.setFillAlpha(65);
+        set.setFillColor(Color.BLACK);
+        set.setDrawCubic(true);
+        set.setDrawFilled(true);
+        set.setDrawValues(false);
 
-        return view;
-    }
+        ArrayList<LineDataSet> dataSets = new ArrayList<>();
+        dataSets.add(set); // add the datasets
 
-    @Override
-    public void onResume() {
-        super.onResume();
-
-        updateConnectionState(userCommandListener.getConnectionStatus(), false, null);
-
-        registerReceiverForAction(gattConnectionStateChangedReceiver, Actions.ACTION_CONNECTION_STATE_CHANGED);
-        registerReceiverForAction(actualCurrentNotificationReceiver, Actions.ACTION_ACTUAL_CURRENT_NOTIFICATION);
-        registerReceiverForAction(activeModeDurationNotificationReceiver, Actions.ACTION_ACTIVE_MODE_DURATION_NOTIFICATION);
-        registerReceiverForAction(programAttributesReadReceiver, Actions.ACTION_PROGRAM_ATTRIBUTES_READ);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        unregisterReceiver(gattConnectionStateChangedReceiver);
-        unregisterReceiver(actualCurrentNotificationReceiver);
-        unregisterReceiver(activeModeDurationNotificationReceiver);
-        unregisterReceiver(programAttributesReadReceiver);
+        LineData data = new LineData(xVals, dataSets);
+        currentChart.setData(data);
     }
 
     private void registerReceiverForAction(BroadcastReceiver receiver, String action) {
@@ -391,9 +448,12 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     }
 
 
+    // TODO should store current
+
     private final BroadcastReceiver actualCurrentNotificationReceiver = new BroadcastReceiver() {
 
         @Override public void onReceive(Context context, Intent intent) {
+            long now = new Date().getTime();
 
             actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
             updateStatus();
