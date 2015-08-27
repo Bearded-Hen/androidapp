@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -58,8 +59,12 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private static final String PLAY_ICON = "fa-play";
     private static final String STOP_ICON = "fa-stop";
 
-    private List<String> xVals;
-    private List<Entry> yVals;
+    private static final long NOTIFICATION_TIMEOUT_MS = 5000;
+
+    private final List<CurrentNotification> currentNotificationList = new ArrayList<>();
+    private final List<String> xVals = new ArrayList<>();
+    private final List<Entry> yVals = new ArrayList<>();
+
     private LineDataSet currentDataSet;
 
     public static ProgramFragment newInstance(Bundle args) {
@@ -77,6 +82,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private boolean settingsVisible = true;
 
     private UserCommandListener userCommandListener;
+    private final Handler handler = new Handler();
 
     @Bind(R.id.program_name) TextView programName;
     @Bind(R.id.program_description) TextView programDesc;
@@ -134,7 +140,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         }
 
         updateConnectionState(userCommandListener.getConnectionStatus(), false, null);
-        setupCurrentChart();
+        setupChart();
 
         return view;
     }
@@ -164,12 +170,32 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @OnClick(R.id.play_button) void onPlayClicked() {
         if (!playing) {
             userCommandListener.onPlayProgram(entity);
+            handler.post(mockDataRunnable);
         }
         else {
             userCommandListener.onStopProgram();
+            handler.removeCallbacks(mockDataRunnable);
         }
+
+        currentNotificationList.clear();
         refreshPlayState();
     }
+
+    // FIXME generates mock current data simulating tRNS
+    private final Runnable mockDataRunnable = new Runnable() {
+
+        @Override public void run() {
+            if (currentChart != null) {
+                int current = new Random().nextInt(20) * 100;
+                long now = new Date().getTime();
+
+                addNewCurrentNotification(current, now);
+                updateChartData();
+
+                handler.postDelayed(this, 100 + new Random().nextInt(100));
+            }
+        }
+    };
 
     @OnClick(R.id.repeat_button) void onRepeatClicked() {
         userCommandListener.onReplayProgram();
@@ -419,35 +445,38 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         }
     }
 
-    private void setupCurrentChart() {
-        int count = 20;
+    /**
+     * Updates the displayed current notification data on the graph
+     */
+    private synchronized void updateChartData() {
+        xVals.clear();
+        yVals.clear();
 
-        xVals = new ArrayList<>();
-        yVals = new ArrayList<>();
+        for (int i=0; i<currentNotificationList.size(); i++) {
+            CurrentNotification notification = currentNotificationList.get(i);
+            float current = ((float)notification.getCurrent()) / 1000;
 
-        for (int i = 0; i < count; i++) {
-            xVals.add(String.format("%d", i));
+            xVals.add(""); // placeholder text required by library
+            yVals.add(new Entry(current, i));
         }
-
-        for (int i = 0; i < count; i++) {
-            float noise = (float) Math.random();
-
-            if (new Random().nextBoolean()) {
-                noise *= -1;
-            }
-            float val = (float) (1.0 + noise);
-            yVals.add(new Entry(val, i));
-        }
-
-        // create a dataset and give it a type
-        currentDataSet = new LineDataSet(yVals, "DataSet");
-        styleChart();
-
-        currentChart.setData(new LineData(xVals, currentDataSet));
+        currentChart.notifyDataSetChanged();
         currentChart.invalidate();
     }
 
-    private void styleChart() {
+    private synchronized void addNewCurrentNotification(int current, long now) {
+        currentNotificationList.add(new CurrentNotification(current, now));
+
+        for (int i=0; i<currentNotificationList.size(); i++) {
+            CurrentNotification notification = currentNotificationList.get(i);
+
+            if (now - notification.getReceivedTime() > NOTIFICATION_TIMEOUT_MS) { // remove old data point
+                currentNotificationList.remove(i);
+                --i;
+            }
+        }
+    }
+
+    private void setupChart() {
         // disable interactions
         currentChart.setTouchEnabled(false);
         currentChart.setDragEnabled(false);
@@ -455,7 +484,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         currentChart.setPinchZoom(false);
         currentChart.setDoubleTapToZoomEnabled(false);
         currentChart.setHighlightEnabled(false);
-        currentChart.setNoDataText("No data from Focus Device");
+        currentChart.setNoDataText("");
 
         // style axes
         YAxis axisLeft = currentChart.getAxisLeft();
@@ -478,6 +507,10 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         currentChart.setBorderColor(Color.RED);
         currentChart.setBorderWidth(10.0f);
 
+        // setup dataset
+        currentDataSet = new LineDataSet(yVals, "DataSet");
+        currentChart.setData(new LineData(xVals, currentDataSet));
+
         // style data points
         currentDataSet.setColor(Color.BLACK);
         currentDataSet.setLineWidth(0f);
@@ -487,7 +520,6 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         currentDataSet.setDrawFilled(true);
         currentDataSet.setDrawValues(false);
         currentDataSet.setDrawCircles(false);
-
         currentChart.setDrawBorders(false);
         currentChart.setBorderWidth(0.0f);
     }
@@ -498,8 +530,6 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
 
         @Override public void onReceive(Context context, Intent intent) {
             long now = new Date().getTime();
-
-
             int current = entity.getCurrent();
 
             actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
@@ -550,4 +580,24 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
             currentStatus.setText(status);
         }
     }
+
+    private static class CurrentNotification {
+
+        private final int current;
+        private final long receivedTime;
+
+        public CurrentNotification(int current, long receivedTime) {
+            this.current = current;
+            this.receivedTime = receivedTime;
+        }
+
+        public int getCurrent() {
+            return current;
+        }
+
+        public long getReceivedTime() {
+            return receivedTime;
+        }
+    }
+
 }
