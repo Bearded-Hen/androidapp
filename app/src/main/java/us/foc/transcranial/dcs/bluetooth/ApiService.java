@@ -103,6 +103,8 @@ public class ApiService extends Service {
 
     private Handler handler;
 
+    private boolean enablingNofications;
+
     // Declare a binder which provides access to the service class for its clients
     public class ApiServiceBinder extends Binder {
 
@@ -728,9 +730,19 @@ public class ApiService extends Service {
 
                         if (descriptor.getUuid().equals(CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR_UUID)) {
 
+                            UUID characteristicUUID = descriptor.getCharacteristic().getUuid();
+
+                            try {
+                                if( characteristicUUID.equals(TDCS_ACTUAL_CURRENT_UUID) ) {
+                                    writePlayModCharacteristic(TDCS_ACTIVE_MODE_DURATION_UUID);
+                                } else if( characteristicUUID.equals(TDCS_ACTIVE_MODE_DURATION_UUID) ) {
+                                    writePlayModCharacteristic(TDCS_ACTIVE_MODE_REMAINING_TIME_UUID);
+                                } else if( characteristicUUID.equals(TDCS_ACTIVE_MODE_REMAINING_TIME_UUID) ) {
+                                    writePlayModCharacteristic(TDCS_CONTROL_RESPONSE_UUID);
+                                } else if( characteristicUUID.equals(TDCS_CONTROL_RESPONSE_UUID) ) {
+
                             // Notifications descriptor has been written to
                             // Now play the program...
-                            try {
 
                                 byte[] data = descriptor.getValue();
 
@@ -743,7 +755,7 @@ public class ApiService extends Service {
                                     }
                                 }
                             }
-                            catch (InvalidCharacteristic invalidCharacteristic) {
+                            } catch (InvalidCharacteristic invalidCharacteristic) {
                                 abortConnection(invalidCharacteristic);
                             }
                         }
@@ -950,19 +962,19 @@ public class ApiService extends Service {
 
     private void setPlayModeNotifications(boolean enabled) throws InvalidCharacteristic {
 
-        writePlayModCharacteristic(TDCS_ACTUAL_CURRENT_UUID, enabled);
-        writePlayModCharacteristic(TDCS_ACTIVE_MODE_DURATION_UUID, enabled);
-        writePlayModCharacteristic(TDCS_ACTIVE_MODE_REMAINING_TIME_UUID, enabled);
-        writePlayModCharacteristic(TDCS_CONTROL_RESPONSE_UUID, enabled);
+        enablingNofications = enabled;
+        writePlayModCharacteristic(TDCS_ACTUAL_CURRENT_UUID);
+//        writePlayModCharacteristic(TDCS_ACTIVE_MODE_DURATION_UUID, enabled);
+//        writePlayModCharacteristic(TDCS_ACTIVE_MODE_REMAINING_TIME_UUID, enabled);
+//        writePlayModCharacteristic(TDCS_CONTROL_RESPONSE_UUID, enabled);
     }
 
-    private void writePlayModCharacteristic(UUID characteristicUUID,
-                                            boolean enabled) throws InvalidCharacteristic {
+    private void writePlayModCharacteristic(UUID characteristicUUID) throws InvalidCharacteristic {
 
         BluetoothGattCharacteristic characteristic = getCharacteristic(TDCS_SERVICE_UUID, characteristicUUID);
         mBluetoothGatt.setCharacteristicNotification(characteristic, true);
         BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR_UUID);
-        descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
+        descriptor.setValue(enablingNofications ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
                                     BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
         mBluetoothGatt.writeDescriptor(descriptor);
     }
