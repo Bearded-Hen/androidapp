@@ -6,6 +6,7 @@
     <color name="icon_disabled">#A0A0A0</color>
 
     <color name="control_bar_bg">#aa235d76</color>
+    <color name="focus_blue">#5292C1</color>
 
     <color name="button_bg">#77404040</color>
     <color name="desc_bg">#77404040</color>

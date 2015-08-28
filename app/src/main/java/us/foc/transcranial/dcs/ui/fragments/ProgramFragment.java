@@ -97,7 +97,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @Bind(R.id.settings_editor) SettingEditorView settingEditorView;
     @Bind(R.id.current_chart) LineChart currentChart;
 
-    @BindColor(R.color.icon_white) int graphColor;
+    @BindColor(R.color.focus_blue) int graphColor;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
