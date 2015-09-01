@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Random;
 
 import butterknife.Bind;
+import butterknife.BindBool;
 import butterknife.BindColor;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -59,7 +60,8 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private static final String PLAY_ICON = "fa-play";
     private static final String STOP_ICON = "fa-stop";
 
-    private static final long NOTIFICATION_TIMEOUT_MS = 5000;
+    private static final int MAX_GRAPH_POINTS_PHONE = 50;
+    private static final int MAX_GRAPH_POINTS_TABLET = 100;
 
     private final List<CurrentNotification> currentNotificationList = new ArrayList<>();
     private final List<String> xVals = new ArrayList<>();
@@ -98,6 +100,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @Bind(R.id.current_chart) LineChart currentChart;
 
     @BindColor(R.color.focus_blue) int graphColor;
+    @BindBool(R.bool.is_tablet) boolean isTablet;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -178,10 +181,13 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         }
 
         currentNotificationList.clear();
+        updateChartData();
         refreshPlayState();
     }
 
-    // FIXME generates mock current data simulating tRNS
+    /**
+     * Generates mock data simulating tRNS
+     */
     private final Runnable mockDataRunnable = new Runnable() {
 
         @Override public void run() {
@@ -192,7 +198,7 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
                 addNewCurrentNotification(current, now);
                 updateChartData();
 
-                handler.postDelayed(this, 100 + new Random().nextInt(100));
+                handler.postDelayed(this, 100 + new Random().nextInt(50));
             }
         }
     };
@@ -436,19 +442,13 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
                 currentStatus.setText("");
             }
         }
-
-        if (playing) {
-            btnPlay.setIcon(STOP_ICON);
-        }
-        else {
-            btnPlay.setIcon(PLAY_ICON);
-        }
+        btnPlay.setIcon(playing ? STOP_ICON : PLAY_ICON);
     }
 
     /**
      * Updates the displayed current notification data on the graph
      */
-    private synchronized void updateChartData() {
+    private void updateChartData() {
         xVals.clear();
         yVals.clear();
 
@@ -463,16 +463,14 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         currentChart.invalidate();
     }
 
-    private synchronized void addNewCurrentNotification(int current, long now) {
+    private void addNewCurrentNotification(int current, long now) {
         currentNotificationList.add(new CurrentNotification(current, now));
 
-        for (int i=0; i<currentNotificationList.size(); i++) {
-            CurrentNotification notification = currentNotificationList.get(i);
+        int allowedPoints = isTablet ? MAX_GRAPH_POINTS_TABLET : MAX_GRAPH_POINTS_PHONE;
 
-            if (now - notification.getReceivedTime() > NOTIFICATION_TIMEOUT_MS) { // remove old data point
-                currentNotificationList.remove(i);
-                --i;
-            }
+        // remove old data via number of points (ensures smooth graph)
+        while (currentNotificationList.size() > allowedPoints) {
+            currentNotificationList.remove(0);
         }
     }
 
@@ -529,11 +527,15 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     private final BroadcastReceiver actualCurrentNotificationReceiver = new BroadcastReceiver() {
 
         @Override public void onReceive(Context context, Intent intent) {
-            long now = new Date().getTime();
-            int current = entity.getCurrent();
 
-            actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
-            updateStatus();
+            if (currentChart != null) {
+//                actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
+//                long now = new Date().getTime();
+//
+//                addNewCurrentNotification(actualCurrent, now);
+//                updateChartData();
+//                updateStatus();
+            }
         }
     };
 

@@ -668,10 +668,7 @@ public class ApiService extends Service {
                             }
 
                             // Update the UI if the value has changed...
-                            if (value != lastActualCurrentReading) {
-                                lastActualCurrentReading = value;
-                                broadcastNotification(Actions.ACTION_ACTUAL_CURRENT_NOTIFICATION, value);
-                            }
+                            broadcastNotification(Actions.ACTION_ACTUAL_CURRENT_NOTIFICATION, value);
 
                             // Or a duration update...
                         }
