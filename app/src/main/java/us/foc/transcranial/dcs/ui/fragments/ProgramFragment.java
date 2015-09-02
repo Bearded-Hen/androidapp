@@ -30,7 +30,6 @@ import com.github.mikephil.charting.data.LineDataSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 
 import butterknife.Bind;
 import butterknife.BindBool;
@@ -173,11 +172,11 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
     @OnClick(R.id.play_button) void onPlayClicked() {
         if (!playing) {
             userCommandListener.onPlayProgram(entity);
-            handler.post(mockDataRunnable);
+//            handler.post(mockDataRunnable);
         }
         else {
             userCommandListener.onStopProgram();
-            handler.removeCallbacks(mockDataRunnable);
+//            handler.removeCallbacks(mockDataRunnable);
         }
 
         currentNotificationList.clear();
@@ -185,23 +184,23 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         refreshPlayState();
     }
 
-    /**
-     * Generates mock data simulating tRNS
-     */
-    private final Runnable mockDataRunnable = new Runnable() {
-
-        @Override public void run() {
-            if (currentChart != null) {
-                int current = new Random().nextInt(20) * 100;
-                long now = new Date().getTime();
-
-                addNewCurrentNotification(current, now);
-                updateChartData();
-
-                handler.postDelayed(this, 100 + new Random().nextInt(50));
-            }
-        }
-    };
+//    /**
+//     * Generates mock data simulating tRNS
+//     */
+//    private final Runnable mockDataRunnable = new Runnable() {
+//
+//        @Override public void run() {
+//            if (currentChart != null) {
+//                int current = new Random().nextInt(20) * 100;
+//                long now = new Date().getTime();
+//
+//                addNewCurrentNotification(current, now);
+//                updateChartData();
+//
+//                handler.postDelayed(this, 100 + new Random().nextInt(50));
+//            }
+//        }
+//    };
 
     @OnClick(R.id.repeat_button) void onRepeatClicked() {
         userCommandListener.onReplayProgram();
@@ -529,12 +528,12 @@ public class ProgramFragment extends Fragment implements SettingsEditEventListen
         @Override public void onReceive(Context context, Intent intent) {
 
             if (currentChart != null) {
-//                actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
-//                long now = new Date().getTime();
-//
-//                addNewCurrentNotification(actualCurrent, now);
-//                updateChartData();
-//                updateStatus();
+                actualCurrent = intent.getExtras().getInt(Actions.EXTRA_NOTIFICATION_VALUE);
+                long now = new Date().getTime();
+
+                addNewCurrentNotification(actualCurrent, now);
+                updateChartData();
+                updateStatus();
             }
         }
     };
